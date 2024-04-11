@@ -114,6 +114,13 @@ com integridade referencial CASCADE para exclusãp e atualização:
 
 =======================================================================
 
+Ciração de indice único na tabela PRODUTO_AUX para a coluna produto_aux_nome
+
+	CREATE UNIQUE INDEX indice_produto_nome
+	ON produto_aux(produto_aux_nome);
+
+=======================================================================
+
 Inserindo Dados no Banco:
 
 	INSERT INTO ESTADO (ESTADO_CODIGO, ESTADO_NOME) VALUES ('AC', 'Acre');
@@ -163,4 +170,166 @@ Inserindo Dados no Banco:
 	INSERT INTO UE_PRODUTO_aux (UE_PRODUTO_aux_CODIGO, UE_PRODUTO_aux_DESCR) VALUES ('FEI', 'FEIJÃO');
 	INSERT INTO UE_PRODUTO_aux (UE_PRODUTO_aux_CODIGO, UE_PRODUTO_aux_DESCR) VALUES ('MAC', 'MACARRÃO');
 	INSERT INTO UE_PRODUTO_aux (UE_PRODUTO_aux_CODIGO, UE_PRODUTO_aux_DESCR) VALUES ('LET', 'LEITE');
+
+=======================================================================================================================
+
+Copiando cada registro da tabela PRODUTO e inserindo na tabela PRODUTO_AUX:
+
+	INSERT INTO produto_aux (produto_aux_nome, produto_aux_preco, ue_produto_aux_codigo)
+	SELECT produto_nome, produto_preco, ue_produto_cod
+	FROM produto;
+
+=======================================================================================================================
+
+Alterando os preços na tabela PRODUTO, aplicando um aumento de 50% sobre o preço, somente
+para os produtos cujo preço for menor que R$ 2,00:
+
+	UPDATE produto
+	SET produto_preco = produto_preco * 1.5
+	WHERE produto_preco < 2;
+
+=======================================================================================================================
+
+Excluindo da tabela PRODUTO_AUX o produto cujo código seja igual a FEI;
+
+	DELETE FROM produto_aux
+	WHERE ue_produto_aux_codigo = 'FEI';
+
+=======================================================================================================================
+
+Selecionando as colunas dos cliente de maneira distinta (cidade, estado e cep):
+
+	SELECT DISTINCT cliente_end_cidade, estado_codigo, cliente_end_cep
+	FROM cliente;
+
+=======================================================================================================================
+
+Selecionando todos os pedidos cujo valor total seja menor que 100 ou maior que 500:
+
+	SELECT *
+	FROM pedido
+	WHERE pedido_valor_total < 100 OR pedido_valor_total > 500;
+
+=======================================================================================================================
+
+Selecionando todos os pedidos cuja data de entrada seja = 11/11/2005 e cujo valor total esteja entre 20 e 50:
+
+	SELECT *
+	FROM pedido
+	WHERE pedido_data_entrega = '11/11/2005'
+	AND (pedido_valor_total BETWEEN 20 AND 50);
+
+=======================================================================================================================
+
+Selecionando todos os produtos cujo nome comece com C ou F ou M, independente do resto:
+
+	SELECT *
+	FROM produto
+	WHERE produto_nome LIKE 'C%'
+	OR produto_nome LIKE 'F%'
+	OR produto_nome LIKE 'M%';
+
+=======================================================================================================================
+
+Selecionando todos os produtos cujo nome possua a string 'A_R' como parte do nome do
+produto, em qualquer posição do nome:
+
+	SELECT *
+	FROM produto
+	WHERE produto_nome LIKE '%A_R%';
+
+=======================================================================================================================
+
+Selecionando todos os clientes cujo estado não seja RJ nem SP:
+
+	SELECT *
+	FROM cliente
+	WHERE estado_codigo NOT LIKE 'RJ'
+	OR estado_codigo NOT LIKE 'SP';
+
+=======================================================================================================================
+
+Selecionando todos os produtos cujo preço seja menor que 20 e a unidade de estoque seja
+'LEITE' ou 'FEIJAO':
+
+	SELECT *
+	FROM produto
+	WHERE produto_preco < 20
+	AND ue_produto_cod IN (SELECT ue_produto_cod FROM ue_produto
+				WHERE ue_produto_descr = 'FEIJAO'
+				OR ue_produto_descr = 'LEITE');
+
+=======================================================================================================================
+
+Selecionando todos os produtos cujo preco seja menor que 3, incluindo os produtos cujo preço esteja nulo:
+
+	SELECT *
+	FROM produto
+	WHERE produto_preco < 3 OR produto_preco is null;
+
+=======================================================================================================================
+
+Selecionando todos os produtos por ordem de nome ascendente e valor descendente
+
+	SELECT *
+	FROM produto
+	ORDER BY produto_nome ASC, produto_preco DESC;
+
+=======================================================================================================================
+
+Selecionando código do cliente, nome do cliente e data de entrada dos pedidos por ordem
+descendente de data de entrada, usando aliases:
+
+	SELECT t1.cliente_id, t1.cliente_nome, t2.pedido_data_entrada
+	FROM cliente AS t1 JOIN pedido AS t2 using (cliente_id)
+	ORDER BY t2.pedido_data_entrada DESC;
+
+=======================================================================================================================
+
+Selecionando o código, o nome dos produtos e o valor total pedido por produto, dos produtos que já
+foram pedidos, classificando por nome do produto de forma descendente selecionando somente os itens
+cuja soma total pedido por produto seja maior que 80, usando aliases:
+
+	SELECT SUM(t1.item_valor_total) AS ValorTotalPorProduto, t2.produto_nome AS nomeProduto,
+	t2.produto_codigo AS produtoCodigo
+	FROM item AS t1, produto AS t2
+	WHERE t1.produto_codigo = t2.produto_codigo
+	GROUP BY produtoCodigo
+	HAVING (SELECT SUM(t1.item_valor_total)FROM item as t1) > 80
+	ORDER BY nomeProduto DESC;
+
+=======================================================================================================================
+
+Selecionando o código do pedido, e a média de valor dos mesmos, somente para os pedidos cujo valor está acima
+da média total, utilizando a cláusula HAVING:
+
+	SELECT pedido_identificacao, AVG(pedido_valor_total) AS valor_medio
+	FROM pedido
+	GROUP BY pedido_identificacao
+	HAVING pedido_valor_total > (SELECT AVG(pedido_valor_total) FROM pedido);
+
+=======================================================================================================================
+
+Selecionando código do pedido, código e nome do cliente, código e nome do produto e descrição 
+da unidade de estoque do produto:
+
+	SELECT t1.pedido_identificacao, t2.cliente_id, t3.cliente_nome, t4.produto_nome, t4.ue_produto_cod
+	FROM item AS t1, pedido AS t2, cliente AS t3, produto AS t4
+	WHERE t1.pedido_identificacao = t2.pedido_identificacao
+	AND t2.cliente_id = t3.cliente_id
+	AND t1.produto_codigo - t4.produto_codigo;
+
+=======================================================================================================================
+
+Selecionando os produtos que nunca foram comprados por cliente que moram no estado do
+"Rio de Janeiro":
+
+	SELECT *
+	FROM produto
+	WHERE produto_codigo NOT IN
+		(SELECT item.produto_codigo
+		FROM item, pedido, cliente
+		WHERE item.pedido_identificacao = pedido.pedido_identificacao
+		AND pedido.cliente_id = cliente.cliente_id
+		AND cliente.estado_codigo = 'RJ');
 		
