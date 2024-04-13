@@ -49,3 +49,74 @@ $$ LANGUAGE plpgsql;
 
 ==========================================================================================================
 
+4) Criar uma stored procedure que recebe o preço e a categoria de um produto. Calcular o reajuste de acordo com a categoria: se a mesma for A=50%, B=25%, C=15% e outras 5%. Depois mostre o valor antigo, o percentual de reajuste e o valor reajustado.
+
+CREATE OR REPLACE FUNCTION reajuste (P REAL, CATEGORIA CHAR(1)) RETURNS VOID AS $$
+DECLARE
+    VALORFINAL REAL := 0;
+BEGIN
+    CASE CATEGORIA
+        WHEN 'A' THEN
+            VALORFINAL := P * 1.5;
+            RAISE NOTICE 'O valor do produto antes do reajuste era: %. Apos o reajuste de 50% na categoria % é de: %.', P, CATEGORIA, VALORFINAL;
+        WHEN 'B' THEN
+            VALORFINAL := P * 1.25;
+            RAISE NOTICE 'O valor do produto antes do reajuste era: %. Apos o reajuste de 25% na categoria % é de: %.', P, CATEGORIA, VALORFINAL;
+        WHEN 'C' THEN
+            VALORFINAL := P * 1.15;
+            RAISE NOTICE 'O valor do produto antes do reajuste era: %. Apos o reajuste de 15% na categoria % é de: %.', P, CATEGORIA, VALORFINAL;
+        ELSE
+            VALORFINAL := P * 1.05;
+            RAISE NOTICE 'O valor do produto antes do reajuste era: %. Apos o reajuste de 5% na categoria % é de: %.', P, CATEGORIA, VALORFINAL;
+    END CASE;
+END;
+$$ LANGUAGE plpgsql;
+
+==========================================================================================================
+
+5) A conversão de graus farenheit para centígrados é obtida por C = 5/9(F - 32)
+Fazer uma stored procedure que calcule e escreva uma tabela de centígrados em função de graus farenheit, que variam de 50 a 150 de 1 em 1.
+
+CREATE OR REPLACE FUNCTION calculaGraus () RETURNS VOID AS $$
+DECLARE
+    C INTEGER := 0;
+    F INTEGER := 50;
+BEGIN
+    LOOP
+        IF F > 150 THEN
+            EXIT;
+        ELSE
+            C:= 5/9(F - 32); 
+            RAISE NOTICE 'Farenheit % - Celsius %', F, C;
+            F:= F+1;
+    END LOOP
+END;
+$$ LANGUAGE plpgsql;
+
+==========================================================================================================
+
+6) Faça uma stored procedure que calcule e apresente a tabuada de um número inteiro passado como parâmetro
+
+CREATE OR REPLACE FUNCTION apresentaTabuada (N INTEGER) RETURN VOID AS $$
+BEGIN
+    FOR I IN 1..10 LOOP
+        RAISE NOTICE '% x % = %', N, I, N*I;
+    END LOOP;
+END
+$$ LANGUAGE plpgsql;
+
+==========================================================================================================
+
+7) Faça uma stored procedure que calcule e apresente o resultado de um número inteiro elevado a outro número inteiro passado como parâmetro. Desenvolva sua própria função de cálculo de potência.
+
+CREATE OR REPLACE FUNCTION potencia (N INTEGER, POT INTEGER) RETURN VOID AS $$
+DECLARE
+    RESULT:= 1;
+BEGIN
+    WHILE POT > 0 LOOP
+        RESULT:= RESULT*N;
+        POT:= POT-1;
+    END LOOP;
+RETURN RESULT;
+END;
+$$ LANGUAGE plpgsql;
