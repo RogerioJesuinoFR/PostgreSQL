@@ -1,0 +1,51 @@
+1) faça uma stored procedure que calcule e imprima na tela o volume de uma lata de óleo, usando a fórmula V=R^2 * A, onde "R" é o raio da lata e "A" é a altura. O usuário deverá passar como parâmetro o comprimento e a altura da lata.
+
+CREATE OR REPLACE FUNCTION calculaVolume (COMPRIMENTO REAL, ALTURA REAL) RETURNS REAL AS $$
+DECLARE
+    VOLUME REAL:= 0;
+BEGIN
+    VOLUME := R*R * ALTURA;
+    RETURN VOLUME;
+END;
+$$ LANGUAGE plpgsql;
+
+==========================================================================================================
+
+2) Faça uma stored procedure que recebe um número inteiro como párâmetro, e imprima na tela se o valor é par ou ímpar.
+
+CREATE OR REPLACE FUNCTION verificaImpar (N INTEGER) RETURN TEXT AS $$
+BEGIN
+    IF (N % 2) = 0 THEN
+        RETURN 'O NÚMERO É PAR';
+    ELSE
+        RETURN 'O NÚMERO É ÍMPAR';
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+==========================================================================================================
+
+3) Escreva uma stored procedure que recebe as coordenadas (X, Y) de um ponto no sistema cartesiano e escreve o quadrante ao qual o ponto pertence. Caso o ponto não pertença a nenhum quadrante, escrever se ele está sobre o eixo X, eixo Y ou na origem.
+
+CREATE OR REPLACE FUNCTION coordenadas (X INTEGER, Y INTEGER) RETURN TEXT AS $$
+BEGIN
+    IF (X = 0 AND Y = 0)THEN
+        RETURN 'O PONTO ESTÁ NA ORIGEM';
+    ELSIF (X > 0 AND Y > 0) THEN
+        RETURN 'O PONTO ESTÁ NO PRIMEIRO QUADRANTE';
+    ELSIF (X < 0 AND Y > 0) THEN
+        RETURN 'O PONTO ESTÁ NO SEGUNDO QUADRANTE';
+    ELSIF (X < 0 AND Y < 0) THEN
+        RETURN 'O PONTO ESTÁ NO TERCEIRO QUADRANTE';
+    ELSIF (X > 0 AND Y < 0) THEN
+        RETURN 'O PONTO ESTÁ NO QUARTO QUADRANTE';
+    ELSIF (X = 0 AND Y <> 0) THEN
+        RETURN 'O PONTO ESTÁ SOBRE O EIXO Y';
+    ELSE
+        RETURN 'O PONTO ESTÁ SOBRE O EIXO X';
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+==========================================================================================================
+
