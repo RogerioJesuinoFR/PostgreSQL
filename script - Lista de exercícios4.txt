@@ -1,0 +1,47 @@
+1) Crie um gatilho que após efetuar uma inclusão, alteração ou exclusão na tabela clientes armazena dados para auditoria na tabela cliente_auditoria.
+
+- Crie uma coluna na tabela cliente_auditoria para refletir a operação (I, U, D);
+- Crie uma coluna para armazenar o usuário responsável pela ação;
+- Crie uma coluna para armazenar o momento da ação;
+- Utilize a variável especial TG_OP;
+- Teste para inserção, exclusão e atualização.
+
+CREATE TABLE CLIENTE_AUDITORIA (CLIENTE_ID INTEGER, CLIENTE_NOME VARCHAR(50), CLIENTE_END VARCHAR(50), CLIENTE_END_CIDADE CHAR(20), ESTADO_CODIGO VARCHAR(2), CLIENTE_END_CEP VARCHAR(8), CLIENTE_TELEFONE VARCHAR(10), CLIENTE_PERC_DESCONTO DECIMAL (2,0));
+
+ALTER TABLE cliente_auditoria ADD COLUMN operacao CHAR(1);
+ALTER TABLE cliente_auditoria ADD COLUMN usuario VARCHAR(50);
+ALTER TABLE cliente_auditoria ADD COLUMN momento TIMESTAMP;
+
+CREATE OR REPLACE FUNCTION realizaAuditoria() RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO CLIENTE_AUDITORIA VALUES (NEW.*, 'I', USER, NOW());
+        RETURN NEW;
+    ELSIF TG_OP = 'UPDATE' THEN
+        INSERT INTO CLIENTE_AUDITORIA VALUES (OLD.*, 'U', USER, NOW());
+        RETURN NEW;
+    ELSE
+        INSERT INTO CLIENTE_AUDITORIA VALUES (OLD.*, 'D', USER, NOW());
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER cliente_audit AFTER INSERT OR DELETE OR UPDATE ON cliente FOR EACH ROW EXECUTE PROCEDURE realizaAuditoria();
+
+===========================================================================================================
+
+2) Crie um gatilho para que antes de efetuar uma inserção na tabela produtos verificar se o nome do produto é nulo e se o preço é nulo ou menor do que zero, caso seja não faz a inclusão e emite uma mensagem.
+
+CREATE OR REPLACE FUNCTION verifica_insercao() RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.produto_nome IS NULL OR NEW.produto_preco IS NULL OR NEW.produto_preco < 0 THEN  
+        RAISE NOTICE 'VALOR INFORMADO É INVÁLIDO';
+        RETURN NULL;
+    END IF;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER novo_produto
+BEFORE INSERT OR UPDATE ON produto
+FOR EACH ROW EXECUTE PROCEDURE verifica_insercao();
